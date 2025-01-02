@@ -63,7 +63,7 @@ impl Url {
         let url_parts: Vec<&str> = self
             .url
             .trim_start_matches("http://")
-            .splitn(2, '/')
+            .splitn(2, "/")
             .collect();
 
         if let Some(index) = url_parts[0].find(':') {
@@ -77,7 +77,7 @@ impl Url {
         let url_parts: Vec<&str> = self
             .url
             .trim_start_matches("http://")
-            .splitn(2, '/')
+            .splitn(2, "/")
             .collect();
 
         if url_parts.len() < 2 {
@@ -101,7 +101,7 @@ impl Url {
 
         let path_and_searchpart: Vec<&str> = url_parts[1].splitn(2, "?").collect();
         if path_and_searchpart.len() < 2 {
-            return "".to_string();
+            "".to_string()
         } else {
             path_and_searchpart[1].to_string()
         }
