@@ -5,7 +5,6 @@ use alloc::string::ToString;
 use alloc::vec::Vec;
 
 #[derive(Debug, Clone)]
-
 pub struct Header {
     name: String,
     value: String,
@@ -17,6 +16,7 @@ impl Header {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct HttpResponse {
     version: String,
     status_code: u32,
