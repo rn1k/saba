@@ -5,6 +5,7 @@ use crate::renderer::html::token::HtmlTokenizer;
 use alloc::rc::Rc;
 use alloc::vec::Vec;
 use core::cell::RefCell;
+use core::char;
 use core::str::FromStr;
 
 use super::token::HtmlToken;
@@ -151,7 +152,36 @@ impl HtmlParser {
                     token = self.t.next();
                     continue;
                 }
-                InsertionMode::AfterHead => {}
+                InsertionMode::AfterHead => {
+                    match token {
+                        Some(HtmlToken::Char(c)) => {
+                            if c == ' ' || c == '\n' {
+                                self.insert_char(c);
+                                token = self.t.next();
+                                continue;
+                            }
+                        }
+                        Some(HtmlToken::StartTag {
+                            ref tag,
+                            self_closing: _,
+                            ref attributes,
+                        }) => {
+                            if tag == "body" {
+                                self.insert_element(tag, attributes.to_vec());
+                                token = self.t.next();
+                                self.mode = InsertionMode::InBody;
+                                continue;
+                            }
+                        }
+                        Some(HtmlToken::Eof) => {
+                            return self.window.clone();
+                        }
+                        _ => {}
+                    }
+                    self.insert_element("body", Vec::new());
+                    self.mode = InsertionMode::InBody;
+                    continue;
+                }
                 InsertionMode::InBody => {}
                 InsertionMode::Text => {}
                 InsertionMode::AfterBody => {}
