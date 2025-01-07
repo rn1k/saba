@@ -1,14 +1,25 @@
 use crate::renderer::dom::node::ElementKind;
 use crate::renderer::dom::node::Node;
 use crate::renderer::dom::node::Window;
+use crate::renderer::html::token::HtmlToken;
 use crate::renderer::html::token::HtmlTokenizer;
 use alloc::rc::Rc;
 use alloc::vec::Vec;
 use core::cell::RefCell;
-use core::char;
 use core::str::FromStr;
 
-use super::token::HtmlToken;
+#[derive(Debug, Copy, Clone)]
+pub enum InsertionMode {
+    Initial,
+    BeforeHtml,
+    BeforeHead,
+    InHead,
+    AfterHead,
+    InBody,
+    Text,
+    AfterBody,
+    AfterAfterBody,
+}
 
 #[derive(Debug, Clone)]
 pub struct HtmlParser {
@@ -283,18 +294,4 @@ impl HtmlParser {
 
         self.window.clone()
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-
-pub enum InsertionMode {
-    Initial,
-    BeforeHtml,
-    BeforeHead,
-    InHead,
-    AfterHead,
-    InBody,
-    Text,
-    AfterBody,
-    AfterAfterBody,
 }
