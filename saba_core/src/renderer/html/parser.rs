@@ -7,6 +7,7 @@ use crate::renderer::html::attribute::Attribute;
 use crate::renderer::html::token::HtmlToken;
 use crate::renderer::html::token::HtmlTokenizer;
 use alloc::rc::Rc;
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::str::FromStr;
@@ -85,6 +86,52 @@ impl HtmlParser {
                 return;
             }
         }
+    }
+
+    fn create_char(&self, c: char) -> Node {
+        let mut s = String::new();
+        s.push(c);
+        Node::new(NodeKind::Text(s))
+    }
+
+    fn insert_char(&mut self, c: char) {
+        let current = match self.stack_of_open_elements.last() {
+            Some(n) => n.clone(),
+            None => return,
+        };
+
+        if let NodeKind::Text(ref mut s) = current.borrow_mut().kind {
+            s.push(s);
+            return;
+        }
+
+        if c == '\n' || c == ' ' {
+            return;
+        }
+
+        let node = Rc::new(RefCell::new(self.create_char(c)));
+
+        if current.borrow().first_child().is_some() {
+            current
+                .borrow()
+                .first_child()
+                .unwrap()
+                .borrow_mut()
+                .set_next_sibling(Some(node.clone()));
+            node.borrow_mut().set_previous_sibling(Rc::downgrade(
+                &current
+                    .borrow()
+                    .first_child()
+                    .expect("failed to get first child"),
+            ));
+        } else {
+            current.borrow_mut().set_first_child(Some(node.clone()));
+        }
+
+        current.borrow_mut().set_last_child(Rc::downgrade(&node));
+        node.borrow_mut().set_parent(Rc::downgrade(&current));
+
+        self.stack_of_open_elements.push(node);
     }
 
     fn create_element(&self, tag: &str, attributes: Vec<Attribute>) -> Node {
