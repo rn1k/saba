@@ -42,6 +42,12 @@ pub struct Node {
     next_sibling: Option<Rc<RefCell<Node>>>,
 }
 
+impl PartialEq for Node {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+}
+
 impl Node {
     pub fn new(kind: NodeKind) -> Self {
         Self {
@@ -125,8 +131,20 @@ pub enum NodeKind {
     Text(String),
 }
 
-#[derive(Debug, Clone)]
-// #[derive(Debug, Clone, PartialEq, Eq)]
+impl PartialEq for NodeKind {
+    fn eq(&self, other: &Self) -> bool {
+        match &self {
+            NodeKind::Document => matches!(other, NodeKind::Document),
+            NodeKind::Element(e1) => match &other {
+                NodeKind::Element(e2) => e1.kind == e2.kind,
+                _ => false,
+            },
+            NodeKind::Text(_) => matches!(other, NodeKind::Text(_)),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Element {
     kind: ElementKind,
     attributes: Vec<Attribute>,
@@ -146,8 +164,7 @@ impl Element {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-// #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ElementKind {
     Html,
     Head,
