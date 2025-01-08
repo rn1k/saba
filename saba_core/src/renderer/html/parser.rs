@@ -296,7 +296,7 @@ impl HtmlParser {
                                 continue;
                             }
                         }
-                        Some(HtmlToken::Eof) => {
+                        Some(HtmlToken::Eof) | None => {
                             return self.window.clone();
                         }
                     }
