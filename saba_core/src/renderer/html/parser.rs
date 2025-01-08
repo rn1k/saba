@@ -12,7 +12,7 @@ use alloc::vec::Vec;
 use core::cell::RefCell;
 use core::str::FromStr;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum InsertionMode {
     Initial,
     BeforeHtml,
@@ -385,21 +385,21 @@ impl HtmlParser {
                                     let element_kind = ElementKind::from_str(tag)
                                         .expect("failed to convert string to ElementKind");
                                     token = self.t.next();
-                                    self.pop_current_node(element_kind);
+                                    self.pop_until(element_kind);
                                     continue;
                                 }
                                 "h1" | "h2" => {
                                     let element_kind = ElementKind::from_str(tag)
                                         .expect("failed to convert string to ElementKind");
                                     token = self.t.next();
-                                    self.pop_current_node(element_kind);
+                                    self.pop_until(element_kind);
                                     continue;
                                 }
                                 "a" => {
                                     let element_kind = ElementKind::from_str(tag)
                                         .expect("failed to convert string to ElementKind");
                                     token = self.t.next();
-                                    self.pop_current_node(element_kind);
+                                    self.pop_until(element_kind);
                                     continue;
                                 }
                                 _ => {
