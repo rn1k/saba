@@ -101,7 +101,7 @@ impl HtmlParser {
         };
 
         if let NodeKind::Text(ref mut s) = current.borrow_mut().kind {
-            s.push(s);
+            s.push(c);
             return;
         }
 
