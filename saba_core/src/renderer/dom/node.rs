@@ -161,11 +161,11 @@ impl FromStr for ElementKind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "html" => Ok(Self::Html),
-            "head" => Ok(Self::Head),
-            "style" => Ok(Self::Style),
-            "script" => Ok(Self::Script),
-            "body" => Ok(Self::Body),
+            "html" => Ok(ElementKind::Html),
+            "head" => Ok(ElementKind::Head),
+            "style" => Ok(ElementKind::Style),
+            "script" => Ok(ElementKind::Script),
+            "body" => Ok(ElementKind::Body),
             _ => Err(format!("Unimplemented element name: {:?}", s)),
         }
     }
