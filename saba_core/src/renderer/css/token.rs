@@ -173,3 +173,104 @@ impl Iterator for CssTokenizer {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::string::ToString;
+
+    #[test]
+    fn test_empty() {
+        let style = "".to_string();
+        let mut t = CssTokenizer::new(style);
+        assert!(t.next().is_none());
+    }
+
+    #[test]
+    fn test_one_rule() {
+        let style = "p { color: red; }".to_string();
+        let mut t = CssTokenizer::new(style);
+        let expected = [
+            CssToken::Ident("p".to_string()),
+            CssToken::OpenCurly,
+            CssToken::Ident("color".to_string()),
+            CssToken::Colon,
+            CssToken::Ident("red".to_string()),
+            CssToken::Semicolon,
+            CssToken::CloseCurly,
+        ];
+        for e in expected {
+            assert_eq!(Some(e.clone()), t.next());
+        }
+        assert!(t.next().is_none());
+    }
+
+    #[test]
+    fn test_id_selector() {
+        let style = "#id { color: red; }".to_string();
+        let mut t = CssTokenizer::new(style);
+        let expected = [
+            CssToken::HashToken("#id".to_string()),
+            CssToken::OpenCurly,
+            CssToken::Ident("color".to_string()),
+            CssToken::Colon,
+            CssToken::Ident("red".to_string()),
+            CssToken::Semicolon,
+            CssToken::CloseCurly,
+        ];
+        for e in expected {
+            assert_eq!(Some(e.clone()), t.next());
+        }
+        assert!(t.next().is_none());
+    }
+
+    #[test]
+    fn test_class_selector() {
+        let style = ".class { color: red; }".to_string();
+        let mut t = CssTokenizer::new(style);
+        let expected = [
+            CssToken::Delim('.'),
+            CssToken::Ident("class".to_string()),
+            CssToken::OpenCurly,
+            CssToken::Ident("color".to_string()),
+            CssToken::Colon,
+            CssToken::Ident("red".to_string()),
+            CssToken::Semicolon,
+            CssToken::CloseCurly,
+        ];
+        for e in expected {
+            assert_eq!(Some(e.clone()), t.next());
+        }
+        assert!(t.next().is_none());
+    }
+
+    #[test]
+    fn test_multiple_rules() {
+        let style = "p { content: \"Hey\"; }  h1 { font-size: 40; color: blue; }".to_string();
+        let mut t = CssTokenizer::new(style);
+        let expected = [
+            CssToken::Ident("p".to_string()),
+            CssToken::OpenCurly,
+            CssToken::Ident("content".to_string()),
+            CssToken::Colon,
+            CssToken::StringToken("Hey".to_string()),
+            CssToken::Semicolon,
+            CssToken::CloseCurly,
+            CssToken::Ident("h1".to_string()),
+            CssToken::OpenCurly,
+            CssToken::Ident("font-size".to_string()),
+            CssToken::Colon,
+            CssToken::Number(40.0),
+            CssToken::Semicolon,
+            CssToken::Ident("color".to_string()),
+            CssToken::Colon,
+            CssToken::Ident("blue".to_string()),
+            CssToken::Semicolon,
+            CssToken::CloseCurly,
+        ];
+        for e in expected {
+            assert_eq!(Some(e.clone()), t.next());
+        }
+        assert!(t.next().is_none());
+    }
+}
