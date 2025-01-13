@@ -7,7 +7,7 @@ pub enum CssToken {
     Delim(char),
     Number(f64),
     Colon,
-    Semicolon,
+    SemiColon,
     OpenParenthesis,
     CloseParenthesis,
     OpenCurly,
@@ -117,7 +117,7 @@ impl Iterator for CssTokenizer {
                 ',' => CssToken::Delim(','),
                 '.' => CssToken::Delim('.'),
                 ':' => CssToken::Colon,
-                ';' => CssToken::Semicolon,
+                ';' => CssToken::SemiColon,
                 '{' => CssToken::OpenCurly,
                 '}' => CssToken::CloseCurly,
                 '0'..='9' => {
@@ -196,7 +196,7 @@ mod tests {
             CssToken::Ident("color".to_string()),
             CssToken::Colon,
             CssToken::Ident("red".to_string()),
-            CssToken::Semicolon,
+            CssToken::SemiColon,
             CssToken::CloseCurly,
         ];
         for e in expected {
@@ -215,7 +215,7 @@ mod tests {
             CssToken::Ident("color".to_string()),
             CssToken::Colon,
             CssToken::Ident("red".to_string()),
-            CssToken::Semicolon,
+            CssToken::SemiColon,
             CssToken::CloseCurly,
         ];
         for e in expected {
@@ -235,7 +235,7 @@ mod tests {
             CssToken::Ident("color".to_string()),
             CssToken::Colon,
             CssToken::Ident("red".to_string()),
-            CssToken::Semicolon,
+            CssToken::SemiColon,
             CssToken::CloseCurly,
         ];
         for e in expected {
@@ -254,18 +254,18 @@ mod tests {
             CssToken::Ident("content".to_string()),
             CssToken::Colon,
             CssToken::StringToken("Hey".to_string()),
-            CssToken::Semicolon,
+            CssToken::SemiColon,
             CssToken::CloseCurly,
             CssToken::Ident("h1".to_string()),
             CssToken::OpenCurly,
             CssToken::Ident("font-size".to_string()),
             CssToken::Colon,
             CssToken::Number(40.0),
-            CssToken::Semicolon,
+            CssToken::SemiColon,
             CssToken::Ident("color".to_string()),
             CssToken::Colon,
             CssToken::Ident("blue".to_string()),
-            CssToken::Semicolon,
+            CssToken::SemiColon,
             CssToken::CloseCurly,
         ];
         for e in expected {
