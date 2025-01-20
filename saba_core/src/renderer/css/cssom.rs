@@ -107,9 +107,10 @@ impl CssParser {
                         self.t.next();
                     }
                 }
-                return Selector::TypeSelector(ident.to_string());
+                Selector::TypeSelector(ident.to_string())
             }
             CssToken::AtKeyword(_keyword) => {
+                // @で始まるルールは無視してトークンを進める
                 while self.t.peek() != Some(&CssToken::OpenCurly) {
                     self.t.next();
                 }
