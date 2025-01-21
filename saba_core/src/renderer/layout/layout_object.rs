@@ -1,6 +1,8 @@
+use crate::renderer::css::cssom::StyleSheet;
 use crate::renderer::dom::node::Node;
 use crate::renderer::dom::node::NodeKind;
 use crate::renderer::layout::computed_style::ComputedStyle;
+use crate::renderer::layout::computed_style::DisplayType;
 use alloc::rc::Rc;
 use alloc::rc::Weak;
 use core::cell::RefCell;
@@ -138,4 +140,38 @@ impl LayoutSize {
     pub fn set_height(&mut self, height: i64) {
         self.height = height;
     }
+}
+
+pub fn create_layout_object(
+    node: &Option<Rc<RefCell<Node>>>,
+    parent_obj: &Option<Rc<RefCell<LayoutObject>>>,
+    cssom: &StyleSheet,
+) -> Option<Rc<RefCell<LayoutObject>>> {
+    if let Some(n) = node {
+        let layout_object = Rc::new(RefCell::new(LayoutObject::new(n.clone(), parent_obj)));
+
+        for rule in &cssom.rules {
+            if layout_object.borrow().is_node_selected(&rule.selector) {
+                layout_object
+                    .borrow_mut()
+                    .cascading_style(rule.declarations.clone());
+            }
+        }
+
+        let parent_style = if let Some(parent) = parent_obj {
+            Some(parent.borrow().style())
+        } else {
+            None
+        };
+        layout_object.borrow_mut().defaulting_style(n, parent_style);
+
+        if layout_object.borrow().style().display() == DisplayType::None {
+            return None;
+        }
+
+        layout_object.borrow_mut().update_kind();
+        return Some(layout_object);
+    }
+
+    None
 }
