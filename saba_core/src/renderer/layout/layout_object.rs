@@ -198,7 +198,7 @@ pub fn create_layout_object(
         };
         layout_object.borrow_mut().defaulting_style(n, parent_style);
 
-        if layout_object.borrow().style().display() == DisplayType::None {
+        if layout_object.borrow().style().display() == DisplayType::DisplayNone {
             return None;
         }
 
