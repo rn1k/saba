@@ -33,6 +33,48 @@ impl ComputedStyle {
         }
     }
 
+    pub fn defaulting(&mut self, node: &Rc<RefCell<Node>>, parent_style: Option<ComputedStyle>) {
+        if let Some(parent_style) = parent_style {
+            if self.background_color.is_none() && parent_style.background_color() != Color::white()
+            {
+                self.background_color = Some(parent_style.background_color());
+            }
+            if self.color.is_none() && parent_style.color() != Color::black() {
+                self.color = Some(parent_style.color());
+            }
+            if self.font_size.is_none() && parent_style.font_size() != FontSize::Medium {
+                self.font_size = Some(parent_style.font_size());
+            }
+            if self.text_decoration.is_none()
+                && parent_style.text_decoration() != TextDecoration::None
+            {
+                self.text_decoration = Some(parent_style.text_decoration());
+            }
+        }
+
+        if self.background_color.is_none() {
+            self.background_color = Some(Color::white());
+        }
+        if self.color.is_none() {
+            self.color = Some(Color::black());
+        }
+        if self.display.is_none() {
+            self.display = Some(DisplayType::default(node))
+        }
+        if self.font_size.is_none() {
+            self.font_size = Some(FontSize::default(node));
+        }
+        if self.text_decoration.is_none() {
+            self.text_decoration = Some(TextDecoration::default(node));
+        }
+        if self.height.is_none() {
+            self.height = Some(0.0);
+        }
+        if self.width.is_none() {
+            self.width = Some(0.0);
+        }
+    }
+
     pub fn set_background_color(&mut self, color: Color) {
         self.background_color = Some(color);
     }
