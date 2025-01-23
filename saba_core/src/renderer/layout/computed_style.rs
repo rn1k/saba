@@ -231,7 +231,7 @@ impl DisplayType {
         }
     }
 
-    fn from_str(s: &str) -> Result<Self, Error> {
+    pub fn from_str(s: &str) -> Result<Self, Error> {
         match s {
             "block" => Ok(Self::Block),
             "inline" => Ok(Self::Inline),
