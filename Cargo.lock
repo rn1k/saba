@@ -118,6 +118,7 @@ dependencies = [
  "net_wasabi",
  "noli",
  "saba_core",
+ "ui_wasabi",
 ]
 
 [[package]]
