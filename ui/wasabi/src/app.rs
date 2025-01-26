@@ -219,7 +219,7 @@ impl WasabiUI {
         self.window.flush_area(
             Rect::new(
                 WINDOW_INIT_X_POS,
-                WINDOW_INIT_Y_POS,
+                WINDOW_INIT_Y_POS + TITLE_BAR_HEIGHT,
                 WINDOW_WIDTH,
                 TOOLBAR_HEIGHT,
             )
