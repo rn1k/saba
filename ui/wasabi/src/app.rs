@@ -1,4 +1,5 @@
 use crate::alloc::string::ToString;
+use crate::cursor::Cursor;
 use alloc::format;
 use alloc::rc::Rc;
 use alloc::string::String;
@@ -27,6 +28,7 @@ pub struct WasabiUI {
     input_url: String,
     input_mode: InputMode,
     window: Window,
+    cursor: Cursor,
 }
 
 impl WasabiUI {
@@ -44,11 +46,17 @@ impl WasabiUI {
                 WINDOW_HEIGHT,
             )
             .unwrap(),
+            cursor: Cursor::new(),
         }
     }
 
     fn handle_mouse_input(&mut self) -> Result<(), Error> {
         if let Some(MouseEvent { button, position }) = Api::get_mouse_cursor_info() {
+            self.window.flush_area(self.cursor.rect());
+            self.cursor.set_position(position.x, position.y);
+            self.window.flush_area(self.cursor.rect());
+            self.cursor.flush();
+
             if button.l() || button.c() || button.r() {
                 let relative_pos = (
                     position.x - WINDOW_INIT_X_POS,
@@ -120,7 +128,6 @@ impl WasabiUI {
             self.handle_mouse_input()?;
             self.handle_key_input()?;
         }
-        Ok(())
     }
 
     fn setup(&mut self) -> Result<(), Error> {
