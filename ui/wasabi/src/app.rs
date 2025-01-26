@@ -30,6 +30,19 @@ impl WasabiUI {
         }
     }
 
+    pub fn start(&mut self) -> Result<(), Error> {
+        self.setup()?;
+
+        self.run_app()?;
+
+        Ok(())
+    }
+
+    fn run_app(&mut self) -> Result<(), Error> {
+        // 後ほど実装
+        Ok(())
+    }
+
     fn setup(&mut self) -> Result<(), Error> {
         if let Err(error) = self.setup_toolbar() {
             // OsResutとResultのエラー型が異なるため、エラー型を変換する
