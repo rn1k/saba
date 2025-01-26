@@ -4,11 +4,10 @@
 extern crate alloc;
 
 use alloc::rc::Rc;
-use alloc::string::ToString;
 use core::cell::RefCell;
 use noli::*;
 use saba_core::browser::Browser;
-use saba_core::http::HttpResponse;
+use ui_wasabi::app::WasabiUI;
 
 fn main() -> u64 {
     let browser = Browser::new();

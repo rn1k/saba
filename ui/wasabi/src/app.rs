@@ -1,7 +1,8 @@
-use alloc::fmt::format;
+use crate::alloc::string::ToString;
+use alloc::format;
 use alloc::rc::Rc;
 use core::cell::RefCell;
-use noli::error::OsResult;
+use noli::error::Result as OsResult;
 use noli::window::StringSize;
 use noli::window::Window;
 use saba_core::browser::Browser;
