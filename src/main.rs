@@ -3,14 +3,17 @@
 
 extern crate alloc;
 
+use crate::alloc::string::ToString;
 use alloc::format;
 use alloc::rc::Rc;
+use alloc::string::String;
 use core::cell::RefCell;
 use net_wasabi::http::HttpClient;
 use noli::*;
 use saba_core::browser::Browser;
 use saba_core::error::Error;
 use saba_core::http::HttpResponse;
+use saba_core::url::Url;
 use ui_wasabi::app::WasabiUI;
 
 fn handle_url(url: String) -> Result<HttpResponse, Error> {

@@ -14,6 +14,7 @@ use noli::window::StringSize;
 use noli::window::Window;
 use saba_core::browser::Browser;
 use saba_core::constants::*;
+use saba_core::display_item::DisplayItem;
 use saba_core::error::Error;
 use saba_core::http::HttpResponse;
 
@@ -142,8 +143,22 @@ impl WasabiUI {
             }
         }
 
-        // self.update_ui();
+        self.update_ui();
 
+        Ok(())
+    }
+
+    fn update_ui(&mut self) -> Result<(), Error> {
+        let display_items = self
+            .browser
+            .borrow()
+            .current_page()
+            .borrow()
+            .display_items();
+
+        for item in display_items {
+            println!("{:?}", item);
+        }
         Ok(())
     }
 
@@ -158,7 +173,8 @@ impl WasabiUI {
         Ok(())
     }
 
-    fn run_app(&mut self
+    fn run_app(
+        &mut self,
         handle_url: fn(String) -> Result<HttpResponse, Error>,
     ) -> Result<(), Error> {
         loop {
