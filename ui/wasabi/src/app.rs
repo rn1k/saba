@@ -17,6 +17,7 @@ use saba_core::constants::*;
 use saba_core::display_item::DisplayItem;
 use saba_core::error::Error;
 use saba_core::http::HttpResponse;
+use saba_core::renderer::layout::computed_style::FontSize;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum InputMode {
@@ -157,8 +158,34 @@ impl WasabiUI {
             .display_items();
 
         for item in display_items {
-            println!("{:?}", item);
+            match item {
+                DisplayItem::Text {
+                    text,
+                    style,
+                    layout_point,
+                } => {
+                    if self
+                        .window
+                        .draw_string(
+                            style.color().code_u32(),
+                            layout_point.x() + WINDOW_PADDING,
+                            layout_point.y() + WINDOW_PADDING + TOOLBAR_HEIGHT,
+                            &text,
+                            convert_font_size(style.font_size()),
+                            false,
+                        )
+                        .is_err()
+                    {
+                        return Err(Error::InvalidUI("failed to draw a string".to_string()));
+                    }
+                }
+                _ => {
+                    // ほかの要素の描画
+                }
+            }
         }
+        self.window.flush();
+
         Ok(())
     }
 
@@ -326,5 +353,13 @@ impl WasabiUI {
         self.window.flush();
 
         Ok(())
+    }
+}
+
+fn convert_font_size(size: FontSize) -> StringSize {
+    match size {
+        FontSize::Medium => StringSize::Medium,
+        FontSize::XLarge => StringSize::XLarge,
+        FontSize::XXLarge => StringSize::XXLarge,
     }
 }
