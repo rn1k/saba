@@ -215,10 +215,10 @@ impl LayoutObject {
                         size.set_height(CHAR_HEIGHT_WITH_PADDING * ratio);
                     }
                 }
-
-                self.size = size;
             }
         }
+
+        self.size = size;
     }
 
     pub fn compute_position(
