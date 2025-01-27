@@ -1,7 +1,12 @@
 use crate::browser::Browser;
 use crate::display_item::DisplayItem;
 use crate::http::HttpResponse;
+use crate::renderer::css::cssom::CssParser;
 use crate::renderer::css::cssom::StyleSheet;
+use crate::renderer::css::token::CssTokenizer;
+use crate::renderer::dom::api::get_style_content;
+use crate::renderer::dom::node::ElementKind;
+use crate::renderer::dom::node::NodeKind;
 use crate::renderer::dom::node::Window;
 use crate::renderer::html::parser::HtmlParser;
 use crate::renderer::html::token::HtmlTokenizer;
@@ -11,10 +16,6 @@ use alloc::rc::Weak;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::cell::RefCell;
-
-use super::css::cssom::CssParser;
-use super::css::token::CssTokenizer;
-use super::dom::api::get_style_content;
 
 #[derive(Debug, Clone)]
 pub struct Page {
