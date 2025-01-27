@@ -18,6 +18,7 @@ use saba_core::display_item::DisplayItem;
 use saba_core::error::Error;
 use saba_core::http::HttpResponse;
 use saba_core::renderer::layout::computed_style::FontSize;
+use saba_core::renderer::layout::computed_style::TextDecoration;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum InputMode {
@@ -172,7 +173,7 @@ impl WasabiUI {
                             layout_point.y() + WINDOW_PADDING + TOOLBAR_HEIGHT,
                             &text,
                             convert_font_size(style.font_size()),
-                            false,
+                            style.text_decoration() == TextDecoration::Underline,
                         )
                         .is_err()
                     {
