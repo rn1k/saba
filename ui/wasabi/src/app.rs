@@ -376,7 +376,7 @@ impl WasabiUI {
 fn convert_font_size(size: FontSize) -> StringSize {
     match size {
         FontSize::Medium => StringSize::Medium,
-        FontSize::XLarge => StringSize::XLarge,
-        FontSize::XXLarge => StringSize::XXLarge,
+        FontSize::XLarge => StringSize::Large,
+        FontSize::XXLarge => StringSize::XLarge,
     }
 }
