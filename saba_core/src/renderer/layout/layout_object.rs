@@ -255,6 +255,8 @@ impl LayoutObject {
                 point.set_y(parent_point.y());
             }
         }
+
+        self.point = point;
     }
 
     pub fn update_kind(&mut self) {
