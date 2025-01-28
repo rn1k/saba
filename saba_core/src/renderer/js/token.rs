@@ -186,4 +186,53 @@ mod tests {
         }
         assert!(lexer.peek().is_none());
     }
+
+    #[test]
+    fn test_assign_variable() {
+        let input = "var foo=\"bar\";".to_string();
+        let mut lexer = JsLexer::new(input).peekable();
+        let expected = [
+            Token::Keyword("var".to_string()),
+            Token::Identifier("foo".to_string()),
+            Token::Punctuator('='),
+            Token::StringLiteral("bar".to_string()),
+            Token::Punctuator(';'),
+        ]
+        .to_vec();
+        let mut i = 0;
+        while lexer.peek().is_some() {
+            assert_eq!(Some(expected[i].clone()), lexer.next());
+            i += 1;
+        }
+
+        assert!(lexer.peek().is_none());
+    }
+
+    #[test]
+    fn test_add_variable_and_num() {
+        let input = "var foo=42; var result=foo+1;".to_string();
+        let mut lexer = JsLexer::new(input).peekable();
+        let expected = [
+            Token::Keyword("var".to_string()),
+            Token::Identifier("foo".to_string()),
+            Token::Punctuator('='),
+            Token::Number(42),
+            Token::Punctuator(';'),
+            Token::Keyword("var".to_string()),
+            Token::Identifier("result".to_string()),
+            Token::Punctuator('='),
+            Token::Identifier("foo".to_string()),
+            Token::Punctuator('+'),
+            Token::Number(1),
+            Token::Punctuator(';'),
+        ]
+        .to_vec();
+        let mut i = 0;
+        while lexer.peek().is_some() {
+            assert_eq!(Some(expected[i].clone()), lexer.next());
+            i += 1;
+        }
+
+        assert!(lexer.peek().is_none());
+    }
 }
