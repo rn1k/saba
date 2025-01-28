@@ -21,7 +21,6 @@ use alloc::string::ToString;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::cell::RefCell;
-use core::panic;
 
 fn find_index_for_line_break(line: String, max_index: usize) -> usize {
     for i in (0..max_index).rev() {

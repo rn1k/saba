@@ -161,7 +161,7 @@ impl WasabiUI {
             }
         }
 
-        self.update_ui();
+        self.update_ui()?;
 
         Ok(())
     }
@@ -259,7 +259,7 @@ impl WasabiUI {
     fn setup_toolbar(&mut self) -> OsResult<()> {
         // ツールバーの背景の四角を描画
         self.window
-            .fill_rect(LIGHTGREY, 0, 0, WINDOW_WIDTH, TOOLBAR_HEIGHT);
+            .fill_rect(LIGHTGREY, 0, 0, WINDOW_WIDTH, TOOLBAR_HEIGHT)?;
 
         // ツールバーとコンテンツエリアの境目の線を描画
         self.window
@@ -290,7 +290,7 @@ impl WasabiUI {
         self.window.draw_line(GREY, 70, 2, WINDOW_WIDTH - 4, 2)?;
         self.window
             .draw_line(GREY, 70, 2, 70, 2 + ADDRESSBAR_HEIGHT)?;
-        self.window.draw_line(BLACK, 71, 3, WINDOW_WIDTH - 5, 3);
+        self.window.draw_line(BLACK, 71, 3, WINDOW_WIDTH - 5, 3)?;
 
         self.window
             .draw_line(GREY, 71, 3, 71, 1 + ADDRESSBAR_HEIGHT)?;
