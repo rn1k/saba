@@ -321,4 +321,52 @@ mod tests {
         expected.set_body(body);
         assert_eq!(expected, parser.parse_ast());
     }
+
+    #[test]
+    fn test_assign_variable() {
+        let input = "var foo=\"bar\";".to_string();
+        let lexer = JsLexer::new(input);
+        let mut parser = JsParser::new(lexer);
+        let mut expected = Program::new();
+        let mut body = Vec::new();
+        body.push(Rc::new(Node::VariableDecration {
+            declarations: [Some(Rc::new(Node::VariableDeclarator {
+                id: Some(Rc::new(Node::Identifier("foo".to_string()))),
+                init: Some(Rc::new(Node::StringLiteral("bar".to_string()))),
+            }))]
+            .to_vec(),
+        }));
+        expected.set_body(body);
+        assert_eq!(expected, parser.parse_ast());
+    }
+
+    #[test]
+    fn test_add_variable_and_num() {
+        let input = "var foo=42; var result=foo+1;".to_string();
+        let lexer = JsLexer::new(input);
+        let mut parser = JsParser::new(lexer);
+        let mut expected = Program::new();
+        let mut body = Vec::new();
+
+        body.push(Rc::new(Node::VariableDecration {
+            declarations: [Some(Rc::new(Node::VariableDeclarator {
+                id: Some(Rc::new(Node::Identifier("foo".to_string()))),
+                init: Some(Rc::new(Node::NumberLiteral(42))),
+            }))]
+            .to_vec(),
+        }));
+        body.push(Rc::new(Node::VariableDecration {
+            declarations: [Some(Rc::new(Node::VariableDeclarator {
+                id: Some(Rc::new(Node::Identifier("result".to_string()))),
+                init: Some(Rc::new(Node::AdditiveExpression {
+                    operator: '+',
+                    left: Some(Rc::new(Node::Identifier("foo".to_string()))),
+                    right: Some(Rc::new(Node::NumberLiteral(1))),
+                })),
+            }))]
+            .to_vec(),
+        }));
+        expected.set_body(body);
+        assert_eq!(expected, parser.parse_ast());
+    }
 }
