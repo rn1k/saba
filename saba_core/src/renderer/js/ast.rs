@@ -130,6 +130,8 @@ impl JsParser {
         };
 
         match t {
+            Token::Identifier(value) => Node::new_identifier(value),
+            Token::StringLiteral(value) => Node::new_string_literal(value),
             Token::Number(n) => Node::new_numeric_literal(n),
             _ => None,
         }
@@ -164,11 +166,77 @@ impl JsParser {
     }
 
     fn assignment_expression(&mut self) -> Option<Rc<Node>> {
-        self.additive_expression()
+        let expr = self.additive_expression();
+
+        let t = match self.t.peek() {
+            Some(token) => token,
+            None => return expr,
+        };
+
+        match t {
+            Token::Punctuator('=') => {
+                assert!(self.t.next().is_some());
+                Node::new_assignment_expression('=', expr, self.assignment_expression())
+            }
+            _ => expr,
+        }
+    }
+
+    fn initialiser(&mut self) -> Option<Rc<Node>> {
+        let t = match self.t.next() {
+            Some(token) => token,
+            None => return None,
+        };
+
+        match t {
+            Token::Punctuator(c) => match c {
+                '=' => self.assignment_expression(),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn identifier(&mut self) -> Option<Rc<Node>> {
+        let t = match self.t.next() {
+            Some(token) => token,
+            None => return None,
+        };
+
+        match t {
+            Token::Identifier(name) => Node::new_identifier(name),
+            _ => None,
+        }
+    }
+
+    fn variable_declaration(&mut self) -> Option<Rc<Node>> {
+        let ident = self.identifier();
+
+        let declarator = Node::new_variable_declarator(ident, self.initialiser());
+        let mut declarations = Vec::new();
+        declarations.push(declarator);
+
+        Node::new_variable_declaration(declarations)
     }
 
     fn statement(&mut self) -> Option<Rc<Node>> {
-        let node = Node::new_expression_statement(self.assignment_expression());
+        let t = match self.t.peek() {
+            Some(t) => t,
+            None => return None,
+        };
+
+        let node = match t {
+            Token::Keyword(keyword) => {
+                if keyword == "var" {
+                    assert!(self.t.next().is_some());
+
+                    self.variable_declaration()
+                } else {
+                    None
+                }
+            }
+            _ => Node::new_expression_statement(self.assignment_expression()),
+        };
 
         if let Some(Token::Punctuator(c)) = self.t.peek() {
             if c == &';' {
