@@ -2,7 +2,7 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 
-static RESERVED_KEYWORDS: [&str; 1] = ["var"];
+static RESERVED_KEYWORDS: [&str; 3] = ["var", "function", "return"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
