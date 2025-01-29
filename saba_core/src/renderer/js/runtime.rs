@@ -1,10 +1,14 @@
 use crate::renderer::js::ast::Node;
 use crate::renderer::js::ast::Program;
+use alloc::format;
 use alloc::rc::Rc;
 use alloc::string::String;
+use alloc::string::ToString;
 use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::cell::RefCell;
+use core::fmt::Display;
+use core::fmt::Formatter;
 use core::ops::Add;
 use core::ops::Sub;
 
@@ -13,14 +17,18 @@ type VariableMap = Vec<(String, Option<RuntimeValue>)>;
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuntimeValue {
     Number(u64),
+    StringLiteral(String),
 }
 
 impl Add<RuntimeValue> for RuntimeValue {
     type Output = RuntimeValue;
 
     fn add(self, rhs: RuntimeValue) -> RuntimeValue {
-        let (RuntimeValue::Number(left_num), RuntimeValue::Number(right_num)) = (&self, &rhs);
-        return RuntimeValue::Number(left_num + right_num);
+        if let (RuntimeValue::Number(left_num), RuntimeValue::Number(right_num)) = (&self, &rhs) {
+            return RuntimeValue::Number(left_num + right_num);
+        }
+
+        RuntimeValue::StringLiteral(self.to_string() + &rhs.to_string())
     }
 }
 
@@ -28,8 +36,22 @@ impl Sub<RuntimeValue> for RuntimeValue {
     type Output = RuntimeValue;
 
     fn sub(self, rhs: RuntimeValue) -> RuntimeValue {
-        let (RuntimeValue::Number(left_num), RuntimeValue::Number(right_num)) = (&self, &rhs);
-        return RuntimeValue::Number(left_num - right_num);
+        if let (RuntimeValue::Number(left_num), RuntimeValue::Number(right_num)) = (&self, &rhs) {
+            return RuntimeValue::Number(left_num - right_num);
+        }
+
+        // NaNとして処理
+        RuntimeValue::Number(u64::MIN)
+    }
+}
+
+impl Display for RuntimeValue {
+    fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
+        let s = match self {
+            RuntimeValue::Number(value) => format!("{}", value),
+            RuntimeValue::StringLiteral(value) => value.to_string(),
+        };
+        write!(f, "{}", s)
     }
 }
 
@@ -87,24 +109,28 @@ impl JsRuntime {
         }
     }
 
-    fn eval(&mut self, node: &Option<Rc<Node>>) -> Option<RuntimeValue> {
+    fn eval(
+        &mut self,
+        node: &Option<Rc<Node>>,
+        env: Rc<RefCell<Environment>>,
+    ) -> Option<RuntimeValue> {
         let node = match node {
             Some(n) => n,
             None => return None,
         };
 
         match node.borrow() {
-            Node::ExpressionStatement(expr) => return self.eval(&expr),
+            Node::ExpressionStatement(expr) => return self.eval(&expr, env.clone()),
             Node::AdditiveExpression {
                 operator,
                 left,
                 right,
             } => {
-                let left_value = match self.eval(&left) {
+                let left_value = match self.eval(&left, env.clone()) {
                     Some(value) => value,
                     None => return None,
                 };
-                let right_value = match self.eval(&right) {
+                let right_value = match self.eval(&right, env.clone()) {
                     Some(value) => value,
                     None => return None,
                 };
@@ -118,11 +144,21 @@ impl JsRuntime {
                 }
             }
             Node::AssignmentExpression {
-                operator: _,
-                left: _,
-                right: _,
+                operator,
+                left,
+                right,
             } => {
-                // 後ほど実装
+                if operator != &'=' {
+                    return None;
+                }
+                // 変数の再割り当て
+                if let Some(node) = left {
+                    if let Node::Identifier(id) = node.borrow() {
+                        let new_value = self.eval(right, env.clone());
+                        env.borrow_mut().update_variable(id.to_string(), new_value);
+                        return None;
+                    }
+                }
                 None
             }
             Node::MemberExpression {
@@ -133,13 +169,33 @@ impl JsRuntime {
                 None
             }
             Node::NumberLiteral(value) => Some(RuntimeValue::Number(*value)),
-            _ => todo!(),
+            Node::VariableDecration { declarations } => {
+                for declaration in declarations {
+                    self.eval(&declaration, env.clone());
+                }
+                None
+            }
+            Node::VariableDeclarator { id, init } => {
+                if let Some(node) = id {
+                    if let Node::Identifier(id) = node.borrow() {
+                        let init = self.eval(&init, env.clone());
+                        env.borrow_mut().add_variable(id.to_string(), init);
+                    }
+                }
+                None
+            }
+            Node::Identifier(name) => match env.borrow_mut().get_variable(name.to_string()) {
+                Some(v) => Some(v),
+                // 変数が見つからない場合は文字列リテラルとして扱う (ex. var a = 42; の`a`が文字列)
+                None => Some(RuntimeValue::StringLiteral(name.to_string())),
+            },
+            Node::StringLiteral(value) => Some(RuntimeValue::StringLiteral(value.to_string())),
         }
     }
 
     pub fn execute(&mut self, program: &Program) {
         for node in program.body() {
-            self.eval(&Some(node.clone()));
+            self.eval(&Some(node.clone()), self.env.clone());
         }
     }
 }
@@ -162,7 +218,7 @@ mod tests {
         let mut i = 0;
 
         for node in ast.body() {
-            let result = runtime.eval(&Some(node.clone()));
+            let result = runtime.eval(&Some(node.clone()), runtime.env.clone());
             assert_eq!(expected[i], result);
             i += 1;
         }
@@ -179,7 +235,7 @@ mod tests {
         let mut i = 0;
 
         for node in ast.body() {
-            let result = runtime.eval(&Some(node.clone()));
+            let result = runtime.eval(&Some(node.clone()), runtime.env.clone());
             assert_eq!(expected[i], result);
             i += 1;
         }
@@ -196,7 +252,7 @@ mod tests {
         let mut i = 0;
 
         for node in ast.body() {
-            let result = runtime.eval(&Some(node.clone()));
+            let result = runtime.eval(&Some(node.clone()), runtime.env.clone());
             assert_eq!(expected[i], result);
             i += 1;
         }
