@@ -1,9 +1,14 @@
 use crate::renderer::js::ast::Node;
 use crate::renderer::js::ast::Program;
 use alloc::rc::Rc;
+use alloc::string::String;
+use alloc::vec::Vec;
 use core::borrow::Borrow;
+use core::cell::RefCell;
 use core::ops::Add;
 use core::ops::Sub;
+
+type VariableMap = Vec<(String, Option<RuntimeValue>)>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RuntimeValue {
@@ -29,11 +34,57 @@ impl Sub<RuntimeValue> for RuntimeValue {
 }
 
 #[derive(Debug, Clone)]
-pub struct JsRuntime {}
+pub struct Environment {
+    variables: VariableMap,
+    outer: Option<Rc<RefCell<Environment>>>,
+}
+
+impl Environment {
+    fn new(outer: Option<Rc<RefCell<Environment>>>) -> Self {
+        Self {
+            variables: VariableMap::new(),
+            outer,
+        }
+    }
+
+    pub fn get_variable(&self, name: String) -> Option<RuntimeValue> {
+        for variable in &self.variables {
+            if variable.0 == name {
+                return variable.1.clone();
+            }
+        }
+        if let Some(env) = &self.outer {
+            env.borrow_mut().get_variable(name)
+        } else {
+            None
+        }
+    }
+
+    fn add_variable(&mut self, name: String, value: Option<RuntimeValue>) {
+        self.variables.push((name, value));
+    }
+
+    fn update_variable(&mut self, name: String, value: Option<RuntimeValue>) {
+        for i in 0..self.variables.len() {
+            if self.variables[i].0 == name {
+                self.variables.remove(i);
+                self.variables.push((name, value));
+                return;
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct JsRuntime {
+    env: Rc<RefCell<Environment>>,
+}
 
 impl JsRuntime {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            env: Rc::new(RefCell::new(Environment::new(None))),
+        }
     }
 
     fn eval(&mut self, node: &Option<Rc<Node>>) -> Option<RuntimeValue> {
