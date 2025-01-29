@@ -1,5 +1,6 @@
 use crate::renderer::js::token::JsLexer;
 use alloc::rc::Rc;
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::iter::Peekable;
 
@@ -23,6 +24,15 @@ pub enum Node {
         property: Option<Rc<Node>>,
     },
     NumberLiteral(u64),
+    VariableDecration {
+        declarations: Vec<Option<Rc<Node>>>,
+    },
+    VariableDeclarator {
+        id: Option<Rc<Node>>,
+        init: Option<Rc<Node>>,
+    },
+    Identifier(String),
+    StringLiteral(String),
 }
 
 impl Node {
@@ -63,6 +73,25 @@ impl Node {
 
     pub fn new_numeric_literal(value: u64) -> Option<Rc<Self>> {
         Some(Rc::new(Node::NumberLiteral(value)))
+    }
+
+    pub fn new_variable_declarator(
+        id: Option<Rc<Self>>,
+        init: Option<Rc<Self>>,
+    ) -> Option<Rc<Self>> {
+        Some(Rc::new(Node::VariableDeclarator { id, init }))
+    }
+
+    pub fn new_variable_declaration(declarations: Vec<Option<Rc<Self>>>) -> Option<Rc<Self>> {
+        Some(Rc::new(Node::VariableDecration { declarations }))
+    }
+
+    pub fn new_identifier(name: String) -> Option<Rc<Self>> {
+        Some(Rc::new(Node::Identifier(name)))
+    }
+
+    pub fn new_string_literal(value: String) -> Option<Rc<Self>> {
+        Some(Rc::new(Node::StringLiteral(value)))
     }
 }
 
