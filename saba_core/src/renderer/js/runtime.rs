@@ -55,6 +55,19 @@ impl Display for RuntimeValue {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Function {
+    id: String,
+    params: Vec<Option<Rc<Node>>>,
+    body: Option<Rc<Node>>,
+}
+
+impl Function {
+    fn new(id: String, params: Vec<Option<Rc<Node>>>, body: Option<Rc<Node>>) -> Self {
+        Self { id, params, body }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Environment {
     variables: VariableMap,
@@ -99,12 +112,14 @@ impl Environment {
 
 #[derive(Debug, Clone)]
 pub struct JsRuntime {
+    functions: Vec<Function>,
     env: Rc<RefCell<Environment>>,
 }
 
 impl JsRuntime {
     pub fn new() -> Self {
         Self {
+            functions: Vec::new(),
             env: Rc::new(RefCell::new(Environment::new(None))),
         }
     }
