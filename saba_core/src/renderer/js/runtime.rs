@@ -190,6 +190,7 @@ impl JsRuntime {
                 None => Some(RuntimeValue::StringLiteral(name.to_string())),
             },
             Node::StringLiteral(value) => Some(RuntimeValue::StringLiteral(value.to_string())),
+            _ => todo!(),
         }
     }
 
