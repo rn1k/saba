@@ -176,11 +176,71 @@ impl JsParser {
     }
 
     fn member_expression(&mut self) -> Option<Rc<Node>> {
-        self.primary_expression()
+        let expr = self.primary_expression();
+
+        let t = match self.t.peek() {
+            Some(token) => token,
+            None => return expr,
+        };
+
+        match t {
+            Token::Punctuator(c) => {
+                if c == &'.' {
+                    // '.'を消費する
+                    assert!(self.t.next().is_some());
+                    return Node::new_member_expression(expr, self.identifier());
+                }
+
+                expr
+            }
+            _ => expr,
+        }
+    }
+
+    fn arguments(&mut self) -> Vec<Option<Rc<Node>>> {
+        let mut arguments = Vec::new();
+
+        loop {
+            match self.t.peek() {
+                Some(t) => match t {
+                    Token::Punctuator(c) => {
+                        if c == &')' {
+                            assert!(self.t.next().is_some());
+                            return arguments;
+                        }
+                        if c == &',' {
+                            assert!(self.t.next().is_some());
+                        }
+                    }
+                    _ => {
+                        arguments.push(self.assignment_expression());
+                    }
+                },
+                None => return arguments,
+            }
+        }
     }
 
     fn left_hand_side_expression(&mut self) -> Option<Rc<Node>> {
-        self.member_expression()
+        let expr = self.member_expression();
+
+        let t = match self.t.peek() {
+            Some(token) => token,
+            None => return expr,
+        };
+
+        match t {
+            Token::Punctuator(c) => {
+                if c == &'(' {
+                    // '('を消費する
+                    assert!(self.t.next().is_some());
+                    return Node::new_call_expression(expr, self.arguments());
+                }
+
+                expr
+            }
+            _ => expr,
+        }
     }
 
     fn additive_expression(&mut self) -> Option<Rc<Node>> {
@@ -269,6 +329,10 @@ impl JsParser {
                     assert!(self.t.next().is_some());
 
                     self.variable_declaration()
+                } else if keyword == "return" {
+                    assert!(self.t.next().is_some());
+
+                    Node::new_return_statement(self.assignment_expression())
                 } else {
                     None
                 }
@@ -285,13 +349,96 @@ impl JsParser {
         node
     }
 
+    fn function_body(&mut self) -> Option<Rc<Node>> {
+        // '{' を消費する
+        match self.t.next() {
+            Some(t) => match t {
+                Token::Punctuator(c) => assert!(c == '{'),
+                _ => unimplemented!(
+                    "function body should have open curly bracket but got {:?}",
+                    t
+                ),
+            },
+            None => unimplemented!("function body should have open curly bracket but got None"),
+        };
+
+        let mut body = Vec::new();
+
+        loop {
+            match self.t.peek() {
+                Some(t) => match t {
+                    Token::Punctuator(c) => {
+                        if c == &'}' {
+                            assert!(self.t.next().is_some());
+                            return Node::new_block_statement(body);
+                        }
+                    }
+                    _ => {}
+                },
+                None => {}
+            }
+
+            body.push(self.source_element());
+        }
+    }
+
+    fn parameter_list(&mut self) -> Vec<Option<Rc<Node>>> {
+        let mut params = Vec::new();
+
+        match self.t.next() {
+            Some(t) => match t {
+                Token::Punctuator(c) => assert!(c == '('),
+                _ => unimplemented!("function should have `(` but got {:?}", t),
+            },
+            None => unimplemented!("function should have `(` but got None"),
+        }
+
+        loop {
+            match self.t.peek() {
+                Some(t) => match t {
+                    Token::Punctuator(c) => {
+                        if c == &')' {
+                            assert!(self.t.next().is_some());
+                            return params;
+                        }
+                        if c == &',' {
+                            assert!(self.t.next().is_some());
+                        }
+                    }
+
+                    _ => {
+                        params.push(self.identifier());
+                    }
+                },
+                None => return params,
+            }
+        }
+    }
+
+    fn function_declaration(&mut self) -> Option<Rc<Node>> {
+        let id = self.identifier();
+        let params = self.parameter_list();
+
+        Node::new_function_declaration(id, params, self.function_body())
+    }
+
     pub fn source_element(&mut self) -> Option<Rc<Node>> {
-        match self.t.peek() {
+        let t = match self.t.peek() {
             Some(t) => t,
             None => return None,
         };
 
-        self.statement()
+        match t {
+            Token::Keyword(keyword) => {
+                if keyword == "function" {
+                    assert!(self.t.next().is_some());
+                    self.function_declaration()
+                } else {
+                    self.statement()
+                }
+            }
+            _ => self.statement(),
+        }
     }
 
     pub fn parse_ast(&mut self) -> Program {
