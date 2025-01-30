@@ -1,5 +1,6 @@
 use crate::renderer::dom::api::get_element_by_id;
 use crate::renderer::dom::node::Node as DomNode;
+use crate::renderer::dom::node::NodeKind as DomNodeKind;
 use crate::renderer::js::ast::Node;
 use crate::renderer::js::ast::Program;
 use alloc::format;
@@ -219,6 +220,28 @@ impl JsRuntime {
                         return None;
                     }
                 }
+
+                // 左辺がDOMノード(HtmlElement)の場合、DOMツリーを更新
+                if let Some(RuntimeValue::HtmlElement { object, property }) =
+                    self.eval(left, env.clone())
+                {
+                    let right_value = match self.eval(right, env.clone()) {
+                        Some(value) => value,
+                        None => return None,
+                    };
+
+                    if let Some(p) = property {
+                        // target.textContent = "foobar"; のようにテキストを更新する
+                        if p == "textContent" {
+                            object
+                                .borrow_mut()
+                                .set_first_child(Some(Rc::new(RefCell::new(DomNode::new(
+                                    DomNodeKind::Text(right_value.to_string()),
+                                )))));
+                        }
+                    }
+                }
+
                 None
             }
             Node::MemberExpression { object, property } => {
@@ -231,6 +254,15 @@ impl JsRuntime {
                     // プロパティが存在しないため、object_valueをここで返す
                     None => return Some(object_value),
                 };
+
+                // オブジェクトがDOMノードの場合、HtmlElementのプロパティを更新する
+                if let RuntimeValue::HtmlElement { object, property } = object_value {
+                    assert!(property.is_none());
+                    return Some(RuntimeValue::HtmlElement {
+                        object,
+                        property: Some(property_value.to_string()),
+                    });
+                }
 
                 // document.getElementByIdは"document.getElementById"という文字列として扱う
                 // このメソッドへの呼び出しは、document.getElementByIdという名前の関数呼び出しになる
@@ -334,7 +366,7 @@ impl JsRuntime {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::renderer::dom::node::NodeKind as DomNodeKind;
+
     use crate::renderer::js::ast::JsParser;
     use crate::renderer::js::token::JsLexer;
     use alloc::string::ToString;
