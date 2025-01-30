@@ -205,7 +205,62 @@ impl JsRuntime {
                 None => Some(RuntimeValue::StringLiteral(name.to_string())),
             },
             Node::StringLiteral(value) => Some(RuntimeValue::StringLiteral(value.to_string())),
-            _ => todo!(),
+            Node::BlockStatement { body } => {
+                let mut result: Option<RuntimeValue> = None;
+                for stmt in body {
+                    result = self.eval(&stmt, env.clone());
+                }
+                result
+            }
+            Node::ReturnStatement { argument } => self.eval(&argument, env.clone()),
+            Node::FunctionDeclaration { id, params, body } => {
+                if let Some(RuntimeValue::StringLiteral(id)) = self.eval(&id, env.clone()) {
+                    let clonned_body = match body {
+                        Some(b) => Some(b.clone()),
+                        None => return None,
+                    };
+                    self.functions
+                        .push(Function::new(id, params.to_vec(), clonned_body));
+                }
+                None
+            }
+            Node::CallExpression { callee, arguments } => {
+                let new_env = Rc::new(RefCell::new(Environment::new(Some(env))));
+
+                let callee_value = match self.eval(&callee, new_env.clone()) {
+                    Some(value) => value,
+                    None => return None,
+                };
+
+                let function = {
+                    let mut f: Option<Function> = None;
+
+                    for func in &self.functions {
+                        if callee_value == RuntimeValue::StringLiteral(func.id.to_string()) {
+                            f = Some(func.clone());
+                        }
+                    }
+
+                    match f {
+                        Some(f) => f,
+                        None => panic!("function {:?} doesn't exist", callee),
+                    }
+                };
+                // 関数呼び出し時に渡される引数を新しく作成したスコープのローカル変数として割り当てる
+                assert!(arguments.len() == function.params.len());
+                for (i, item) in arguments.iter().enumerate() {
+                    if let Some(RuntimeValue::StringLiteral(name)) =
+                        self.eval(&function.params[i], new_env.clone())
+                    {
+                        new_env
+                            .borrow_mut()
+                            .add_variable(name, self.eval(item, new_env.clone()));
+                    }
+                }
+
+                // 関数の中身を新しいスコープとともにevalメソッドで解釈する
+                self.eval(&function.body.clone(), new_env.clone())
+            }
         }
     }
 
